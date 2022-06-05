@@ -33,6 +33,33 @@ void App::DoFrame()
 	while (const unsigned char e = wnd.kbd.ReadChar())
 	{
 		wnd.input.get()->update((UINT)e, wnd.mouse.GetPosX(), wnd.mouse.GetPosY());
+		if (e == VK_ESCAPE)
+		{
+			if (wnd.isInput())
+			{
+				wnd.DisableInput();
+				return;
+			}
+		}
+		if (e == VK_RETURN)
+		{
+			
+			if (!wnd.isInput()) return;
+			char name[30];
+			char phone[30];
+			int a = sscanf(wnd.input.get()->GetContent().c_str(), "%s - %s", name, phone);
+			if (a != 2)
+			{
+				wnd.DrawWarning(L"Введите в формате \"string - uint\"\nИмя - Номер телефона");
+				return;
+			}
+			wnd.DisableInput();
+			char ready[100];
+			wnd.CreateNewOrder(name,phone);
+			sprintf(ready, "Вы добавили нового заказчика!\n\n%s - %s", name, phone);
+			wnd.DrawWarning(Helper::ConvertStringToWstring(ready));
+			
+		}
 	}
 	while (const auto e = wnd.mouse.Read())
 	{
@@ -40,28 +67,30 @@ void App::DoFrame()
 		{
 			case Mouse::Event::Type::Move:
 			{
-				std::ostringstream oss; 
-				oss << "Mouse moved to: (" << e->GetPosX() << "," << e->GetPosY() << ")\n";
-				wnd.SetTitle(oss.str());
 				wnd.buttons[eButtons::ButtonsList::uLoadData].get()->mouseMoved(wnd.GetHandle(), e->GetPosX(), e->GetPosY());
 				wnd.buttons[eButtons::ButtonsList::uGetData].get()->mouseMoved(wnd.GetHandle(), e->GetPosX(), e->GetPosY());
 				wnd.buttons[eButtons::ButtonsList::uInputData].get()->mouseMoved(wnd.GetHandle(), e->GetPosX(), e->GetPosY());
 				wnd.buttons[eButtons::ButtonsList::uCloseData].get()->mouseMoved(wnd.GetHandle(), e->GetPosX(), e->GetPosY());
 				wnd.buttons[eButtons::ButtonsList::uNextData].get()->mouseMoved(wnd.GetHandle(), e->GetPosX(), e->GetPosY());
 				wnd.infoBox.get()->closeInfo.get()->mouseMoved(wnd.GetHandle(), e->GetPosX(), e->GetPosY());
-				wnd.input.get()->closeInfo.get()->mouseMoved(wnd.GetHandle(), e->GetPosX(), e->GetPosY());
+				
 				break;
 			}
 			case Mouse::Event::Type::LPress:
 			{
+				/******************* Navigation Buttons **********************/
 				wnd.buttons[eButtons::ButtonsList::uLoadData].get()->mouseReleased(wnd.GetHandle(), e->GetPosX(), e->GetPosY());
 				wnd.buttons[eButtons::ButtonsList::uGetData].get()->mouseReleased(wnd.GetHandle(), e->GetPosX(), e->GetPosY());
 				wnd.buttons[eButtons::ButtonsList::uInputData].get()->mouseReleased(wnd.GetHandle(), e->GetPosX(), e->GetPosY());
 				wnd.buttons[eButtons::ButtonsList::uCloseData].get()->mouseReleased(wnd.GetHandle(), e->GetPosX(), e->GetPosY());
 				wnd.buttons[eButtons::ButtonsList::uNextData].get()->mouseReleased(wnd.GetHandle(), e->GetPosX(), e->GetPosY());
+				/******************* InfoBox Buttons **********************/
 				wnd.infoBox.get()->closeInfo.get()->mouseReleased(wnd.GetHandle(), e->GetPosX(), e->GetPosY());
-				wnd.input.get()->closeInfo.get()->mouseReleased(wnd.GetHandle(), e->GetPosX(), e->GetPosY());
+				/******************* Input Buttons **********************/
+				
 				wnd.input.get()->ClickInput(wnd.GetHandle(),wnd.mouse.GetPosX(), wnd.mouse.GetPosY());
+				/******************* Event Buttons **********************/
+
 				if (wnd.infoBox.get()->closeInfo.get()->isClicked())
 				{
 					wnd.DisableWarning();
@@ -126,6 +155,15 @@ void App::DoFrame()
 						wnd.status.get()->invalidateProgressBar(wnd.GetHandle());
 					});
 					if (th.get()->joinable()) th.get()->detach();
+				}
+				if (wnd.buttons[eButtons::ButtonsList::uInputData].get()->isClicked())
+				{
+					if (!wnd.s.get()->IsConnect())
+					{
+						wnd.DrawWarning(L"Для начала необходимо подключиться к базе данных!\n\nНажмите на кнопку \"Load Data\"");
+						return;
+					}
+					wnd.DrawInput(L"Введите в формате \"Имя - номер телефона\"");
 				}
 				if (wnd.buttons[eButtons::ButtonsList::uCloseData].get()->isClicked())
 				{

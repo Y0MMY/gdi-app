@@ -67,10 +67,14 @@ public:
 	HWND& GetHandle();
 	HRESULT ConnectToServer(std::string host, std::string bd, std::string user, std::string pass, std::string port);
 	void GetInfoFromServer(std::string,  UINT16 MinCounts, UINT16 MaxCounts);
+	const bool CreateNewOrder(std::string name, std::string phone) const;
 	void DisableButton(int id = -1);
 	void EnableButton(int id = -1);
 	void DrawWarning(std::wstring);
 	void DisableWarning();
+	void DrawInput(std::wstring);
+	void DisableInput();
+	const bool isInput() const;
 private:
 	result R;
 	HWND hWnd;

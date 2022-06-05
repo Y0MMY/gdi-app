@@ -11,6 +11,7 @@ input::input()
 	rInput.Y = 290;
 	rInput.Width = 302;
 	rInput.Height = 57;
+
 }
 const void input::Draw(Graphics* gt)
 {
@@ -25,45 +26,38 @@ const void input::Draw(Graphics* gt)
 	 if(isInFocus)Corner::FillRoundRect(gt, fillColor.get(), rInput, Color(250, 250, 250), 5);
 	 else Corner::FillRoundRect(gt, focusColor.get(), rInput, Color(250, 250, 250), 5);
 	 if (!content.empty()) StringInput(gt);
-	 closeInfo.get()->draw(gt);
 }
 
-short GetSymbolFromVK(int wParam)
-{
-	std::wstring out;
-	std::cout << wParam << std::endl;
-	BYTE btKeyState[256] = { 0 };
-	HKL hklLayout = GetKeyboardLayout(0);
-	WCHAR buff[32];
-	WORD Symbol = NULL;
-	GetKeyboardState(btKeyState);
-		
-		
-	if ((ToAsciiEx(wParam, MapVirtualKey(wParam, 0), btKeyState, &Symbol, 0, hklLayout) == 1) && GetKeyState(VK_CONTROL) >= 0 && GetKeyState(VK_MENU) >= 0)
-	{
-		out += Symbol;
-		OutputDebugStringW(out.c_str());
-	}
-	return -1;
 
-}
 const void input::update(UINT key, int x, int y)
 {	
-	//if (isInFocus)
-	//{
-	//	if (key == VK_BACK)
-	//	{
-	//		if (key == VK_BACK) {
-
-	//			if (content.size() > 0)content.pop_back();
-	//			InvalidateRect(hWnd, 0, 1);
-	//			return;
-	//		}
-	//	}
-	//	content.push_back(key);
-	//	InvalidateRect(hWnd, 0, 1);
-	//}
-	GetSymbolFromVK(key);
+	if (isInFocus)
+	{
+		if (key == VK_RETURN) return;
+		if (GetAsyncKeyState(VK_LCONTROL) && GetAsyncKeyState(VK_BACK) & 1)
+		{
+			content = L"\0";
+			Scontent = "\0";
+			InvalidateRect(hWnd, 0, 1);
+			return;
+		}
+		if (key == VK_BACK)
+		{
+			if (content.size() > 0)
+			{
+				content.pop_back();
+				Scontent.pop_back();
+			}
+			InvalidateRect(hWnd, 0, 1);
+			return;
+		}
+		char str[2]; 	
+		sprintf((char*)str, "%c", key); 	
+		std::string s = str;
+		Scontent += str;
+		content += Helper::ConvertStringToWstring(s.c_str());
+		InvalidateRect(hWnd, 0, 1);
+	}
 }
 
 const void input::StringInput(Graphics* g)
@@ -86,3 +80,10 @@ const bool input::ClickInput(HWND hWnd,int x, int y)
 	InvalidateRect(hWnd, 0, 1);
 	return false;
 }
+
+const std::string input::GetContent() const
+{
+	return Scontent;
+}
+
+

@@ -13,6 +13,7 @@ public:
 	~SQLQuery() = default;
 	HRESULT connect(std::string);
 	result query(std::string);
+	void queryInsert(std::string);
 	HRESULT disconnect();
 	bool IsConnect();
 private:

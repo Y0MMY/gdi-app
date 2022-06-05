@@ -1,0 +1,13 @@
+{
+    "name": "GCC 7.2.0",
+    "compilers": {
+      "C": "C:\\Strawberry\\c\\bin\\gcc.exe",
+      "CXX": "C:\\Strawberry\\c\\bin\\g++.exe"
+    },
+    "preferredGenerator": {
+      "name": "MinGW Makefiles"
+    },
+    "environmentVariables": {
+      "CMT_MINGW_PATH": "C:\\Strawberry\\c\\bin\\bin"
+    }
+  }

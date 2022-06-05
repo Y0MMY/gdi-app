@@ -43,6 +43,15 @@ result SQLQuery::query(std::string query)
 	return R;
 }
 
+void SQLQuery::queryInsert(std::string str)
+{
+	work W(*conn.get());
+
+	/* Execute SQL query */
+	W.exec(str.c_str());
+	W.commit();
+}
+
 HRESULT SQLQuery::disconnect()
 {
 	conn.get()->close();

@@ -89,14 +89,14 @@ void Window::paint(HDC hdc)
 			origin.Y += 30;
 		}
 	}
+	/********** input ******************/
+	if(isInputData)
+		this->input.get()->Draw(gt);
 	/********** InfoBox ******************/
 	if (isInfoBox)
 	{
 		infoBox.get()->Draw(gt);
 	}
-	/********** input ******************/
-
-	//this->input.get()->Draw(gt);
 	/**********  ProgressBar  ************/
 	status.get()->drawBar(gt);
 	status.get()->drawText(gt);
@@ -114,6 +114,24 @@ void Window::DisableWarning()
 	EnableButton();
 	infoBox.get()->SetText(L"");
 	isInfoBox = false;
+	InvalidateRect(hWnd, 0, 1);
+}
+const bool Window::isInput() const
+{
+	return isInputData;
+}
+void Window::DrawInput(std::wstring text)
+{
+	DisableButton();
+	input.get()->SetText(text);
+	isInputData = true;
+	InvalidateRect(hWnd, 0, 1);
+}
+void Window::DisableInput()
+{
+	EnableButton();
+	input.get()->SetText(L"");
+	isInputData = false;
 	InvalidateRect(hWnd, 0, 1);
 }
 void Window::LoadResources()
@@ -203,6 +221,31 @@ HRESULT Window::ConnectToServer(std::string host, std::string bd, std::string us
 
 }
 
+const bool Window::CreateNewOrder(std::string name, std::string phone) const
+{
+	if (!s.get()->IsConnect())
+		return false;
+	std::ostringstream oss;
+	oss << "set client_encoding='LATIN1';INSERT INTO foo(name,phone,status) VALUES ('" << name.c_str() << "','" << phone.c_str()
+		<<"',false);set client_encoding='UTF8';";
+	std::string codepage_str = oss.str();
+	int size = MultiByteToWideChar(CP_ACP, MB_COMPOSITE, codepage_str.c_str(),
+		codepage_str.length(), nullptr, 0);
+	std::wstring utf16_str(size, '\0');
+	MultiByteToWideChar(CP_ACP, MB_COMPOSITE, codepage_str.c_str(),
+		codepage_str.length(), &utf16_str[0], size);
+
+	int utf8_size = WideCharToMultiByte(CP_UTF8, 0, utf16_str.c_str(),
+		utf16_str.length(), nullptr, 0,
+		nullptr, nullptr);
+	std::string utf8_str(utf8_size, '\0');
+	WideCharToMultiByte(CP_UTF8, 0, utf16_str.c_str(),
+		utf16_str.length(), &utf8_str[0], utf8_size,
+		nullptr, nullptr);
+
+	s.get()->queryInsert(utf8_str.c_str());
+	return true;
+}
 void Window::GetInfoFromServer(std::string elemet, UINT16 MinCounts, UINT16 MaxCounts)
 {
 	if (!s.get()->IsConnect())
@@ -213,6 +256,7 @@ void Window::GetInfoFromServer(std::string elemet, UINT16 MinCounts, UINT16 MaxC
 	R = s.get()->query(oss.str());
 	isDataOpen = true;
 	InvalidateRect(hWnd, 0, true);
+
 }
 void Window::EnableButton(int id)
 {
@@ -232,7 +276,6 @@ void Window::DisableButton(int id)
 	{
 		for (int i = 0; i < buttons.size(); ++i)
 		{
-			cout << "id: " << i << endl;
 			buttons[i].get()->DisableButton();
 		}
 	}
@@ -305,6 +348,7 @@ LRESULT Window::HandleMsg(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) noe
 		/*********** KEYBOARD MESSAGES ***********/
 	case WM_KEYDOWN:
 		// syskey commands need to be handled to track ALT key (VK_MENU) and F10
+		
 	case WM_SYSKEYDOWN:
 		if (!(lParam & 0x40000000) || kbd.AutorepeatIsEnabled()) // filter autorepeat
 		{

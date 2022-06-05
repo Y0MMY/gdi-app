@@ -3,7 +3,8 @@
 #include <string>
 #include <vector>
 #include "../stdafx.h"
-
+#include <codecvt>
+#include <cassert>
 
 class Helper
 {
@@ -30,6 +31,66 @@ public:
 		return wstr;
 	}
 	
+	static std::string ws2s(const std::wstring& w_str) {
+		if (w_str.empty()) {
+			return "";
+		}
+		unsigned len = w_str.size() * 4 + 1;
+		setlocale(LC_CTYPE, "en_US.UTF-8");
+		std::unique_ptr<char[]> p(new char[len]);
+		wcstombs(p.get(), w_str.c_str(), len);
+		std::string str(p.get());
+		return str;
+	}
+	static std::string GetClipboardText()
+	{
+		if (!OpenClipboard(nullptr))
+			return "";
+
+		HANDLE hData = GetClipboardData(CF_TEXT);
+		if (hData == nullptr)
+			return "";
+
+		char* pszText = static_cast<char*>(GlobalLock(hData));
+		if (pszText == nullptr)
+			return "";
+
+		std::string text(pszText);
+
+		GlobalUnlock(hData);
+		CloseClipboard();
+
+		return text;
+	}
+	static std::wstring GetClipboardTextW()
+	{
+		if (!OpenClipboard(nullptr))
+		{
+			CloseClipboard();
+			return L"";
+		}
+
+		HANDLE hData = GetClipboardData(CF_UNICODETEXT);
+		if (hData == nullptr)
+		{
+			CloseClipboard();
+			return L"";
+		}
+
+		wchar_t* pszText = static_cast<wchar_t*>(GlobalLock(hData));
+		if (pszText == nullptr)
+		{
+			CloseClipboard();
+			return L"";
+		}
+
+		std::wstring text(pszText);
+
+		GlobalUnlock(hData);
+		CloseClipboard();
+
+		return text;
+	}
 	static std::wstring ConvertStringToWstring(const std::string& str)
 	{
 		if (str.empty())
